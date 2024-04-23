@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Eclipse JDT UI
-Source: https://github.com/eclipse/eclipse.jdt.ui
+Source: https://github.com/eclipse-jdt/eclipse.jdt.ui
 Files-Excluded: *.jar
                 *.class
                 */testresources/*.zip

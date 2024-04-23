@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -70,6 +70,8 @@ public final class CorrectionMessages extends NLS {
 	public static String QuickAssistProcessor_convert_to_static_import;
 	public static String QuickAssistProcessor_convert_to_static_import_replace_all;
 	public static String QuickAssistProcessor_inline_local_description;
+	public static String QuickAssistProcessor_modify_favorites;
+	public static String QuickAssistProcessor_modify_favorites_desc;
 	public static String QuickAssistProcessor_name_extension_from_class;
 	public static String QuickAssistProcessor_name_extension_from_interface;
 	public static String SerialVersionHashOperation_computing_id;
@@ -196,8 +198,6 @@ public final class CorrectionMessages extends NLS {
 	public static String UnimplementedMethodsCorrectionProposal_info_singular;
 	public static String UnimplementedMethodsCorrectionProposal_info_plural;
 
-	public static String UnimplementedCodeFix_DependenciesErrorMessage;
-	public static String UnimplementedCodeFix_DependenciesStatusMessage;
 	public static String UnimplementedCodeFix_MakeAbstractFix_label;
 	public static String UnimplementedCodeFix_TextEditGroup_label;
 
@@ -216,6 +216,7 @@ public final class CorrectionMessages extends NLS {
 	public static String UnresolvedElementsSubProcessor_changetype_description;
 	public static String UnresolvedElementsSubProcessor_changetype_nopack_description;
 	public static String UnresolvedElementsSubProcessor_importtype_description;
+	public static String UnresolvedElementsSubProcessor_change_to_qualified_description;
 	public static String UnresolvedElementsSubProcessor_changevariable_description;
 	public static String UnresolvedElementsSubProcessor_createfield_description;
 	public static String UnresolvedElementsSubProcessor_createfield_other_description;
@@ -270,16 +271,23 @@ public final class CorrectionMessages extends NLS {
 	public static String NoCorrectionProposal_description;
 	public static String MarkerResolutionProposal_additionaldesc;
 	public static String NewCUCompletionUsingWizardProposal_createclass_description;
+	public static String NewCUCompletionUsingWizardProposal_createrecord_description;
 	public static String NewCUCompletionUsingWizardProposal_createenum_description;
 	public static String NewCUCompletionUsingWizardProposal_createclass_inpackage_description;
+	public static String NewCUCompletionUsingWizardProposal_createrecord_inpackage_description;
 	public static String NewCUCompletionUsingWizardProposal_createinnerclass_description;
+	public static String NewCUCompletionUsingWizardProposal_createnewinnerclass_description;
+	public static String NewCUCompletionUsingWizardProposal_createinnerrecord_description;
+	public static String NewCUCompletionUsingWizardProposal_createnewinnerrecord_description;
 	public static String NewCUCompletionUsingWizardProposal_createinnerenum_description;
 	public static String NewCUCompletionUsingWizardProposal_createannotation_description;
 	public static String NewCUCompletionUsingWizardProposal_createinnerclass_intype_description;
+	public static String NewCUCompletionUsingWizardProposal_createinnerrecord_intype_description;
 	public static String NewCUCompletionUsingWizardProposal_createinnerenum_intype_description;
 	public static String NewCUCompletionUsingWizardProposal_createinterface_description;
 	public static String NewCUCompletionUsingWizardProposal_createinterface_inpackage_description;
 	public static String NewCUCompletionUsingWizardProposal_createinnerinterface_description;
+	public static String NewCUCompletionUsingWizardProposal_createnewinnerinterface_description;
 	public static String NewCUCompletionUsingWizardProposal_createenum_inpackage_description;
 	public static String NewCUCompletionUsingWizardProposal_createinnerannotation_description;
 	public static String NewCUCompletionUsingWizardProposal_createinnerinterface_intype_description;
@@ -293,6 +301,7 @@ public final class CorrectionMessages extends NLS {
 	public static String NewCUCompletionUsingWizardProposal_createnewinterface_inpackage_description;
 	public static String NewCUCompletionUsingWizardProposal_createnewannotation_inpackage_description;
 	public static String NewCUCompletionUsingWizardProposal_createnewenum_inpackage_description;
+	public static String NewCUCompletionUsingWizardProposal_createnewrecord_inpackage_description;
 	public static String ConfigureProblemSeveritySubProcessor_compiler_info;
 	public static String ConfigureProblemSeveritySubProcessor_info;
 	public static String ConfigureProblemSeveritySubProcessor_name;
@@ -389,6 +398,12 @@ public final class CorrectionMessages extends NLS {
 	public static String AdvancedQuickAssistProcessor_joinWithOr_description;
 	public static String AdvancedQuickAssistProcessor_splitOrCondition_description;
 	public static String AdvancedQuickAssistProcessor_exchangeOperands_description;
+	public static String AddGetterSetter_creategetterssettersfortype_description;
+	public static String AddGettersSetters_additional_info;
+	public static String AddHashCodeEquals_createhashcodeequalsfortype_description;
+	public static String AddHashCodeEquals_additional_info;
+	public static String AddToString_createtostringfortype_description;
+	public static String AddToString_additional_info;
 	public static String AddTypeParameterProposal_method_label;
 	public static String AddTypeParameterProposal_type_label;
 
@@ -422,12 +437,15 @@ public final class CorrectionMessages extends NLS {
 	public static String QuickAssistProcessor_extract_to_local_all_description;
 	public static String QuickAssistProcessor_extract_to_local_description;
 	public static String QuickAssistProcessor_extractmethod_description;
+	public static String QuickAssistProcessor_extractmethod_from_lambda_description;
 	public static String QuickAssistProcessor_move_exception_to_separate_catch_block;
 	public static String QuickAssistProcessor_move_exceptions_to_separate_catch_block;
 	public static String QuickAssistProcessor_create_new_junit_test_case;
 	public static String QuickAssistProcessor_create_new_junit_test_case_desc;
 	public static String QuickAssistProcessor_create_new_impl;
 	public static String QuickAssistProcessor_create_new_impl_desc;
+	public static String QuickAssistProcessor_create_new_interface_impl;
+	public static String QuickAssistProcessor_create_new_interface_impl_desc;
 	public static String SuppressWarningsSubProcessor_suppress_warnings_label;
 	public static String ReorgCorrectionsSubProcessor_accessrules_description;
 	public static String ReorgCorrectionsSubProcessor_project_seup_fix_description;

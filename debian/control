@@ -5,7 +5,7 @@ Maintainer: Debian Java Maintainers <pkg-java-maintainers@lists.alioth.debian.or
 Uploaders: Emmanuel Bourg <ebourg@apache.org>
 Build-Depends:
  debhelper-compat (= 13),
- default-jdk,
+ default-jdk (>= 2:1.11),
  ant,
  junit,
  junit4,
@@ -17,16 +17,16 @@ Build-Depends:
  libeclipse-core-filebuffers-java,
  libeclipse-core-filesystem-java,
  libeclipse-core-jobs-java,
- libeclipse-core-resources-java,
+ libeclipse-core-resources-java (>= 3.16),
  libeclipse-core-runtime-java,
  libeclipse-core-variables-java,
  libeclipse-debug-core-java,
  libeclipse-debug-ui-java,
  libeclipse-help-java,
- libeclipse-jdt-core-java (>= 3.20),
+ libeclipse-jdt-core-java (>= 3.32),
  libeclipse-jdt-launching-java (>= 3.11),
  libeclipse-jface-java (>= 3.14),
- libeclipse-jface-text-java (>= 3.16),
+ libeclipse-jface-text-java (>= 3.20),
  libeclipse-search-java,
  libeclipse-team-core-java,
  libeclipse-team-ui-java,
@@ -48,7 +48,7 @@ Build-Depends:
  libicu4j-java,
  libswt-gtk-4-java,
  eclipse-debian-helper
-Standards-Version: 4.6.0.1
+Standards-Version: 4.6.2
 Vcs-Git: https://salsa.debian.org/java-team/eclipse-jdt-ui.git
 Vcs-Browser: https://salsa.debian.org/java-team/eclipse-jdt-ui
 Homepage: https://www.eclipse.org/jdt/ui/
@@ -112,7 +112,7 @@ Depends:
  libeclipse-core-jobs-java,
  libeclipse-core-resources-java,
  libeclipse-core-runtime-java,
- libeclipse-jdt-core-java (>= 3.20),
+ libeclipse-jdt-core-java (>= 3.32),
  libeclipse-jdt-launching-java,
  libeclipse-text-java (>= 3.8),
  libequinox-common-java,
@@ -275,7 +275,7 @@ Depends:
  libeclipse-jdt-core-java (>= 3.16),
  libeclipse-jdt-launching-java (>= 3.11),
  libeclipse-jface-java (>= 3.14),
- libeclipse-jface-text-java (>= 3.16),
+ libeclipse-jface-text-java (>= 3.20),
  libeclipse-search-java,
  libeclipse-team-core-java,
  libeclipse-team-ui-java,
@@ -332,7 +332,7 @@ Depends:
  libeclipse-core-filebuffers-java,
  libeclipse-core-filesystem-java,
  libeclipse-core-jobs-java,
- libeclipse-core-resources-java,
+ libeclipse-core-resources-java (>= 3.16),
  libeclipse-core-runtime-java,
  libeclipse-text-java,
  libequinox-common-java,

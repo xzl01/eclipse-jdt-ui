@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019, 2021 IBM Corporation and others.
+ * Copyright (c) 2019, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -32,6 +32,9 @@ public class ASTHelper {
 	public static final int JLS14 = AST.JLS14;
 	public static final int JLS15 = AST.JLS15;
 	public static final int JLS16 = AST.JLS16;
+	public static final int JLS17 = AST.JLS17;
+	public static final int JLS18 = AST.JLS18;
+	public static final int JLS19 = AST.JLS19;
 
 	private static boolean isNodeTypeSupportedInAST(AST ast, int nodeType) {
 		switch (nodeType) {
@@ -44,6 +47,11 @@ public class ASTHelper {
 			case ASTNode.RECORD_DECLARATION:
 			case ASTNode.INSTANCEOF_EXPRESSION:
 				return ast.apiLevel() >= JLS16;
+			case ASTNode.TAG_PROPERTY:
+				return ast.apiLevel() >= AST.JLS18;
+			case ASTNode.TYPE_PATTERN:
+			case ASTNode.RECORD_PATTERN:
+				return ast.isPreviewEnabled();
 			default:
 				break;
 		}
@@ -54,7 +62,7 @@ public class ASTHelper {
 		switch (modifier) {
 			case Modifier.SEALED:
 			case Modifier.NON_SEALED:
-				return ast.isPreviewEnabled();
+				return ast.apiLevel() >= JLS17;
 			default:
 				break;
 		}
@@ -89,4 +97,15 @@ public class ASTHelper {
 		return isNodeTypeSupportedInAST(ast, ASTNode.INSTANCEOF_EXPRESSION);
 	}
 
+	public static boolean isPatternSupported(AST ast) {
+		return isNodeTypeSupportedInAST(ast, ASTNode.TYPE_PATTERN);
+	}
+
+	public static boolean isRecordPatternSupported(AST ast) {
+		return isNodeTypeSupportedInAST(ast, ASTNode.RECORD_PATTERN);
+	}
+
+	public static boolean isJavaDocCodeSnippetSupported(AST ast) {
+		return isNodeTypeSupportedInAST(ast, ASTNode.TAG_PROPERTY);
+	}
 }

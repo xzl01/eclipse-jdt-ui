@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -58,6 +58,7 @@ public class MultiFixMessages extends NLS {
 	public static String UnusedCodeMultiFix_RemoveUnusedType_description;
 	public static String UnusedCodeMultiFix_RemoveUnusedConstructor_description;
 	public static String UnusedCodeMultiFix_RemoveUnusedMethod_description;
+	public static String UnusedCodeMultiFix_RemoveUnusedParameter_description;
 	public static String UnusedCodeMultiFix_RemoveUnusedImport_description;
 	public static String UnusedCodeCleanUp_RemoveUnusedCasts_description;
 
@@ -92,6 +93,9 @@ public class MultiFixMessages extends NLS {
 	public static String CleanUpRefactoringWizard_WindowTitle;
 	public static String CleanUpRefactoringWizard_PageTitle;
 	public static String CleanUpRefactoringWizard_formatterException_errorMessage;
+
+	public static String CleanUpSelectionDialog_restoreDefaults_label;
+	public static String CleanUpSelectionDialog_resetProfile_label;
 
 	public static String ControlStatementsCleanUp_RemoveUnnecessaryBlocks_description;
 	public static String ControlStatementsCleanUp_RemoveUnnecessaryBlocksWithReturnOrThrow_description;
@@ -199,6 +203,7 @@ public class MultiFixMessages extends NLS {
 	public static String MultiCatchCleanUp_description;
 	public static String ConstantsCleanUp_description;
 	public static String StringBufferToStringBuilderCleanUp_description;
+	public static String StringConcatToTextBlockCleanUp_description;
 	public static String StringBuilderForLocalVarsOnlyCleanUp_description;
 
 	static {

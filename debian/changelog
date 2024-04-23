@@ -1,3 +1,23 @@
+eclipse-jdt-ui (4.26-1) unstable; urgency=medium
+
+  * New upstream release
+    - Depend on libeclipse-jdt-core-java (>= 3.32)
+    - Build more bundles with Java 11
+  * Standards-Version updated to 4.6.2
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Thu, 05 Jan 2023 12:19:29 +0100
+
+eclipse-jdt-ui (4.23-1) unstable; urgency=medium
+
+  * New upstream release
+    - Depend on libeclipse-core-resources-java (>= 3.16)
+    - Depend on libeclipse-jface-text-java (>= 3.20)
+    - Build org.eclipse.jdt.ui with Java 11
+  * Standards-Version updated to 4.6.1
+  * Track and download the new releases from GitHub
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Fri, 09 Dec 2022 09:32:38 +0100
+
 eclipse-jdt-ui (4.21-1) unstable; urgency=medium
 
   * New upstream release

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2017 IBM Corporation and others.
+ * Copyright (c) 2006, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -131,6 +131,8 @@ public class JUnitContainerInitializer extends ClasspathContainerInitializer {
 			entriesList.add(BuildPathSupport.getJUnitPlatformLauncherLibraryEntry());
 			entriesList.add(BuildPathSupport.getJUnitPlatformRunnerLibraryEntry());
 			entriesList.add(BuildPathSupport.getJUnitPlatformSuiteApiLibraryEntry());
+			entriesList.add(BuildPathSupport.getJUnitPlatformSuiteEngineLibraryEntry());
+			entriesList.add(BuildPathSupport.getJUnitPlatformSuiteCommonsLibraryEntry());
 			entriesList.add(BuildPathSupport.getJUnitVintageEngineLibraryEntry());
 			entriesList.add(BuildPathSupport.getJUnitOpentest4jLibraryEntry());
 			entriesList.add(BuildPathSupport.getJUnitApiGuardianLibraryEntry());
@@ -234,25 +236,29 @@ public class JUnitContainerInitializer extends ClasspathContainerInitializer {
 					return JUnitPreferencesConstants.HAMCREST_CORE_JAVADOC;
 				}
 			} else if (JUNIT5.equals(version)) {
-				if (lastSegment.contains("jupiter.api")) { //$NON-NLS-1$
+				if (lastSegment.contains("jupiter.api") || lastSegment.contains("jupiter-api")) { //$NON-NLS-1$ //$NON-NLS-2$
 					return JUnitPreferencesConstants.JUNIT_JUPITER_API_JAVADOC;
-				} else if (lastSegment.contains("jupiter.engine")) { //$NON-NLS-1$
+				} else if (lastSegment.contains("jupiter.engine") || lastSegment.contains("jupiter-engine")) { //$NON-NLS-1$ //$NON-NLS-2$
 					return JUnitPreferencesConstants.JUNIT_JUPITER_ENGINE_JAVADOC;
-				} else if (lastSegment.contains("jupiter.migrationsupport")) { //$NON-NLS-1$
+				} else if (lastSegment.contains("jupiter.migrationsupport") || lastSegment.contains("jupiter-migrationsupport")) { //$NON-NLS-1$ //$NON-NLS-2$
 					return JUnitPreferencesConstants.JUNIT_JUPITER_MIGRATIONSUPPORT_JAVADOC;
-				} else if (lastSegment.contains("jupiter.params")) { //$NON-NLS-1$
+				} else if (lastSegment.contains("jupiter.params") || lastSegment.contains("jupiter-params")) { //$NON-NLS-1$ //$NON-NLS-2$
 					return JUnitPreferencesConstants.JUNIT_JUPITER_PARAMS_JAVADOC;
-				} else if (lastSegment.contains("platform.commons")) { //$NON-NLS-1$
+				} else if (lastSegment.contains("platform.commons") || lastSegment.contains("platform-commons")) { //$NON-NLS-1$ //$NON-NLS-2$
 					return JUnitPreferencesConstants.JUNIT_PLATFORM_COMMONS_JAVADOC;
-				} else if (lastSegment.contains("platform.engine")) { //$NON-NLS-1$
+				} else if (lastSegment.contains("platform.engine") || lastSegment.contains("platform-engine")) { //$NON-NLS-1$ //$NON-NLS-2$
 					return JUnitPreferencesConstants.JUNIT_PLATFORM_ENGINE_JAVADOC;
-				} else if (lastSegment.contains("platform.launcher")) { //$NON-NLS-1$
+				} else if (lastSegment.contains("platform.launcher") || lastSegment.contains("platform-launcher")) { //$NON-NLS-1$ //$NON-NLS-2$
 					return JUnitPreferencesConstants.JUNIT_PLATFORM_LAUNCHER_JAVADOC;
-				} else if (lastSegment.contains("platform.runner")) { //$NON-NLS-1$
+				} else if (lastSegment.contains("platform.runner") || lastSegment.contains("platform-runner")) { //$NON-NLS-1$ //$NON-NLS-2$
 					return JUnitPreferencesConstants.JUNIT_PLATFORM_RUNNER_JAVADOC;
-				} else if (lastSegment.contains("platform.suite.api")) { //$NON-NLS-1$
+				} else if (lastSegment.contains("platform.suite.api") || lastSegment.contains("platform-suite-api")) { //$NON-NLS-1$ //$NON-NLS-2$
 					return JUnitPreferencesConstants.JUNIT_PLATFORM_SUITE_API_JAVADOC;
-				} else if (lastSegment.contains("vintage.engine")) { //$NON-NLS-1$
+				} else if (lastSegment.contains("platform.suite.engine") || lastSegment.contains("platform-suite-engine")) { //$NON-NLS-1$ //$NON-NLS-2$
+					return JUnitPreferencesConstants.JUNIT_PLATFORM_SUITE_ENGINE_JAVADOC;
+				} else if (lastSegment.contains("platform.suite.commons") || lastSegment.contains("platform-suite-commons")) { //$NON-NLS-1$ //$NON-NLS-2$
+					return JUnitPreferencesConstants.JUNIT_PLATFORM_SUITE_COMMONS_JAVADOC;
+				} else if (lastSegment.contains("vintage.engine") || lastSegment.contains("vintage-engine")) { //$NON-NLS-1$ //$NON-NLS-2$
 					return JUnitPreferencesConstants.JUNIT_VINTAGE_ENGINE_JAVADOC;
 				} else if (lastSegment.contains("opentest4j")) { //$NON-NLS-1$
 					return JUnitPreferencesConstants.JUNIT_OPENTEST4J_JAVADOC;

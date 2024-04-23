@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -99,6 +99,9 @@ public final class UnnecessaryCodeTabPage extends AbstractCleanUpTabPage {
 		final CheckboxPreference methodsPref= createCheckboxPref(unusedCodeGroup, 1, CleanUpMessages.UnnecessaryCodeTabPage_CheckboxName_UnusedMethods, CleanUpConstants.REMOVE_UNUSED_CODE_PRIVATE_METHODS, CleanUpModifyDialog.FALSE_TRUE);
 		registerSlavePreference(unusedMembersPref, new CheckboxPreference[] {typesPref, constructorPref, fieldsPref, methodsPref});
 
+		CheckboxPreference unusedParameters= createCheckboxPref(unusedCodeGroup, 5, CleanUpMessages.UnnecessaryCodeTabPage_CheckboxName_UnusedParameters, CleanUpConstants.REMOVE_UNUSED_CODE_METHOD_PARAMETERS, CleanUpModifyDialog.FALSE_TRUE);
+		registerPreference(unusedParameters);
+
     	CheckboxPreference removeLocals= createCheckboxPref(unusedCodeGroup, numColumns, CleanUpMessages.UnnecessaryCodeTabPage_CheckboxName_UnusedLocalVariables, CleanUpConstants.REMOVE_UNUSED_CODE_LOCAL_VARIABLES, CleanUpModifyDialog.FALSE_TRUE);
     	registerPreference(removeLocals);
 
@@ -149,7 +152,9 @@ public final class UnnecessaryCodeTabPage extends AbstractCleanUpTabPage {
 		registerPreference(mapCloning);
 
 		CheckboxPreference overriddenAssignment= createCheckboxPref(unnecessaryGroup, numColumns, CleanUpMessages.UnnecessaryCodeTabPage_CheckboxName_OverriddenAssignment, CleanUpConstants.OVERRIDDEN_ASSIGNMENT, CleanUpModifyDialog.FALSE_TRUE);
-		registerPreference(overriddenAssignment);
+		intent(unnecessaryGroup);
+		CheckboxPreference moveDeclaration= createCheckboxPref(unnecessaryGroup, numColumns-1, CleanUpMessages.UnnecessaryCodeTabPage_CheckboxName_MoveDeclaration, CleanUpConstants.OVERRIDDEN_ASSIGNMENT_MOVE_DECL, CleanUpModifyDialog.FALSE_TRUE);
+		registerOptionPreference(overriddenAssignment, moveDeclaration);
 
 		CheckboxPreference modifiers= createCheckboxPref(unnecessaryGroup, numColumns, CleanUpMessages.UnnecessaryCodeTabPage_CheckboxName_RedundantModifiers, CleanUpConstants.REMOVE_REDUNDANT_MODIFIERS, CleanUpModifyDialog.FALSE_TRUE);
 		registerPreference(modifiers);

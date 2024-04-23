@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -1423,7 +1423,6 @@ public class LocalCorrectionsQuickFixTest extends QuickFixTest {
 		buf= new StringBuilder();
 		buf.append("package test1;\n");
 		buf.append("import java.io.IOException;\n");
-		buf.append("import java.net.SocketException;\n");
 		buf.append("public class E {\n");
 		buf.append("    public void goo() throws IOException {\n");
 		buf.append("        return;\n");
@@ -6392,6 +6391,39 @@ public class LocalCorrectionsQuickFixTest extends QuickFixTest {
 	}
 
 	@Test
+	public void testUnnecessaryCastBug578911() throws Exception {
+		Hashtable<String, String> hashtable= JavaCore.getOptions();
+		hashtable.put(JavaCore.COMPILER_PB_UNNECESSARY_TYPE_CHECK, JavaCore.ERROR);
+		JavaCore.setOptions(hashtable);
+
+		IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
+		StringBuilder buf= new StringBuilder();
+		buf.append("package test1;\n");
+		buf.append("public class E {\n");
+		buf.append("    public void foo(Integer n) {\n");
+		buf.append("        n = (Integer)n;\n");
+		buf.append("    }\n");
+		buf.append("}\n");
+		ICompilationUnit cu= pack1.createCompilationUnit("E.java", buf.toString(), false, null);
+
+		CompilationUnit astRoot= getASTRoot(cu);
+		ArrayList<IJavaCompletionProposal> proposals= collectCorrections(cu, astRoot);
+		assertNumberOfProposals(proposals, 2);
+		assertCorrectLabels(proposals);
+
+		CUCorrectionProposal proposal= (CUCorrectionProposal)proposals.get(0);
+		String preview= getPreviewContent(proposal);
+
+		buf= new StringBuilder();
+		buf.append("package test1;\n");
+		buf.append("public class E {\n");
+		buf.append("    public void foo(Integer n) {\n");
+		buf.append("    }\n");
+		buf.append("}\n");
+		assertEqualString(preview, buf.toString());
+	}
+
+	@Test
 	public void testSuperfluousSemicolon() throws Exception {
 		Hashtable<String, String> hashtable= JavaCore.getOptions();
 		hashtable.put(JavaCore.COMPILER_PB_EMPTY_STATEMENT, JavaCore.ERROR);
@@ -6809,7 +6841,7 @@ public class LocalCorrectionsQuickFixTest extends QuickFixTest {
 
 		buf= new StringBuilder();
 		buf.append("package test1;\n");
-		buf.append("import java.io.IOException;\n");
+		buf.append("\n");
 		buf.append("public class E {\n");
 		buf.append("    public void foo(String b) {\n");
 		buf.append("        if  (b != null) {\n");
@@ -6870,7 +6902,6 @@ public class LocalCorrectionsQuickFixTest extends QuickFixTest {
 		buf= new StringBuilder();
 		buf.append("package test1;\n");
 		buf.append("import java.io.IOException;\n");
-		buf.append("import java.text.ParseException;\n");
 		buf.append("public class E {\n");
 		buf.append("    /**\n");
 		buf.append("     * @throws IOException\n");
@@ -6940,7 +6971,6 @@ public class LocalCorrectionsQuickFixTest extends QuickFixTest {
 		buf= new StringBuilder();
 		buf.append("package test1;\n");
 		buf.append("import java.io.IOException;\n");
-		buf.append("import java.text.ParseException;\n");
 		buf.append("public class E {\n");
 		buf.append("    /**\n");
 		buf.append("     * @param i\n");
@@ -6955,6 +6985,86 @@ public class LocalCorrectionsQuickFixTest extends QuickFixTest {
 		assertEqualString(preview, buf.toString());
 	}
 
+	@Test
+	public void testUnnecessaryThrownException4() throws Exception {
+		Hashtable<String, String> hashtable= JavaCore.getOptions();
+		hashtable.put(JavaCore.COMPILER_PB_UNUSED_DECLARED_THROWN_EXCEPTION, JavaCore.ERROR);
+		JavaCore.setOptions(hashtable);
+
+		IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
+		StringBuilder buf= new StringBuilder();
+		buf.append("package test1;\n");
+		buf.append("import java.io.IOException;\n");
+		buf.append("import java.text.ParseException;\n");
+		buf.append("public class E {\n");
+		buf.append("    /**\n");
+		buf.append("     * @throws IOException\n");
+		buf.append("     */\n");
+		buf.append("    public E(int i) throws IOException, ParseException {\n");
+		buf.append("        if  (i == 0) {\n");
+		buf.append("            throw new IOException();\n");
+		buf.append("        }\n");
+		buf.append("    }\n");
+		buf.append("    public void foo(int i) throws ParseException {\n");
+		buf.append("        if  (i == 0) {\n");
+		buf.append("            throw new ParseException(null, 4);\n");
+		buf.append("        }\n");
+		buf.append("    }\n");
+		buf.append("}\n");
+		ICompilationUnit cu= pack1.createCompilationUnit("E.java", buf.toString(), false, null);
+
+		CompilationUnit astRoot= getASTRoot(cu);
+		ArrayList<IJavaCompletionProposal> proposals= collectCorrections(cu, astRoot);
+		assertNumberOfProposals(proposals, 3);
+		assertCorrectLabels(proposals);
+
+		String[] expected= new String[2];
+
+		buf= new StringBuilder();
+		buf.append("package test1;\n");
+		buf.append("import java.io.IOException;\n");
+		buf.append("import java.text.ParseException;\n");
+		buf.append("public class E {\n");
+		buf.append("    /**\n");
+		buf.append("     * @throws IOException\n");
+		buf.append("     */\n");
+		buf.append("    public E(int i) throws IOException {\n");
+		buf.append("        if  (i == 0) {\n");
+		buf.append("            throw new IOException();\n");
+		buf.append("        }\n");
+		buf.append("    }\n");
+		buf.append("    public void foo(int i) throws ParseException {\n");
+		buf.append("        if  (i == 0) {\n");
+		buf.append("            throw new ParseException(null, 4);\n");
+		buf.append("        }\n");
+		buf.append("    }\n");
+		buf.append("}\n");
+		expected[0]= buf.toString();
+
+		buf= new StringBuilder();
+		buf.append("package test1;\n");
+		buf.append("import java.io.IOException;\n");
+		buf.append("import java.text.ParseException;\n");
+		buf.append("public class E {\n");
+		buf.append("    /**\n");
+		buf.append("     * @throws IOException\n");
+		buf.append("     * @throws ParseException \n");
+		buf.append("     */\n");
+		buf.append("    public E(int i) throws IOException, ParseException {\n");
+		buf.append("        if  (i == 0) {\n");
+		buf.append("            throw new IOException();\n");
+		buf.append("        }\n");
+		buf.append("    }\n");
+		buf.append("    public void foo(int i) throws ParseException {\n");
+		buf.append("        if  (i == 0) {\n");
+		buf.append("            throw new ParseException(null, 4);\n");
+		buf.append("        }\n");
+		buf.append("    }\n");
+		buf.append("}\n");
+		expected[1]= buf.toString();
+
+		assertExpectedExistInProposals(proposals, expected);
+	}
 
 	@Test
 	public void testUnqualifiedFieldAccess1() throws Exception {

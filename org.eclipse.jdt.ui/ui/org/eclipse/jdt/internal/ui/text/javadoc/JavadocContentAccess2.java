@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2020 IBM Corporation and others.
+ * Copyright (c) 2008, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -92,6 +92,7 @@ import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.TagElement;
+import org.eclipse.jdt.core.dom.TagProperty;
 import org.eclipse.jdt.core.dom.TextElement;
 import org.eclipse.jdt.core.manipulation.SharedASTProviderCore;
 
@@ -452,6 +453,8 @@ public class JavadocContentAccess2 {
 	 */
 	private final IJavaElement fElement;
 
+	private final JavaDocSnippetStringEvaluator fSnippetStringEvaluator;
+
 	/**
 	 * The method, or <code>null</code> if {@link #fElement} is not a method where @inheritDoc could
 	 * work.
@@ -468,11 +471,13 @@ public class JavadocContentAccess2 {
 	private StringBuffer[] fTypeParamDescriptions;
 	private StringBuffer[] fParamDescriptions;
 	private HashMap<String, StringBuffer> fExceptionDescriptions;
+	private int fPreCounter;
 
 	private JavadocContentAccess2(IJavaElement element, Javadoc javadoc, String source, JavadocLookup lookup) {
 		Assert.isNotNull(element);
 		Assert.isTrue(element instanceof IMethod || element instanceof ILocalVariable || element instanceof ITypeParameter);
 		fElement= element;
+		fSnippetStringEvaluator= new JavaDocSnippetStringEvaluator(fElement);
 		fMethod= (IMethod) ((element instanceof ILocalVariable || element instanceof ITypeParameter) ? element.getParent() : element);
 		fJavadoc= javadoc;
 		fSource= source;
@@ -482,6 +487,7 @@ public class JavadocContentAccess2 {
 	private JavadocContentAccess2(IJavaElement element, Javadoc javadoc, String source) {
 		Assert.isTrue(element instanceof IMember || element instanceof IPackageFragment || element instanceof ILocalVariable || element instanceof ITypeParameter);
 		fElement= element;
+		fSnippetStringEvaluator= new JavaDocSnippetStringEvaluator(fElement);
 		fMethod= null;
 		fJavadoc= javadoc;
 		fSource= source;
@@ -1382,10 +1388,14 @@ public class JavadocContentAccess2 {
 
 
 	private void handleContentElements(List<? extends ASTNode> nodes) {
-		handleContentElements(nodes, false);
+		handleContentElements(nodes, false, null);
 	}
 
-	private void handleContentElements(List<? extends ASTNode> nodes, boolean skipLeadingWhitespace) {
+	private void handleContentElements(List<? extends ASTNode> nodes, boolean skipLeadingWhiteSpace) {
+		handleContentElements(nodes, skipLeadingWhiteSpace, null);
+	}
+
+	private void handleContentElements(List<? extends ASTNode> nodes, boolean skipLeadingWhitespace, TagElement tagElement) {
 		ASTNode previousNode= null;
 		for (ASTNode child : nodes) {
 			if (previousNode != null) {
@@ -1406,6 +1416,13 @@ public class JavadocContentAccess2 {
 					String text= removeDocLineIntros(textWithStars);
 					fBuf.append(text);
 				}
+			} else if (tagElement != null && fPreCounter >= 1) {
+				int childStart= child.getStartPosition();
+				int previousEnd= tagElement.getStartPosition() + tagElement.getTagName().length() + 1;
+				// Need to preserve whitespace before a node in a <pre> section
+				String textWithStars= fSource.substring(previousEnd, childStart);
+				String text= removeDocLineIntros(textWithStars);
+				fBuf.append(text);
 			}
 			previousNode= child;
 			if (child instanceof TextElement) {
@@ -1415,6 +1432,20 @@ public class JavadocContentAccess2 {
 				}
 				// workaround for https://bugs.eclipse.org/bugs/show_bug.cgi?id=233481 :
 				text= text.replaceAll("(\r\n?|\n)([ \t]*\\*)", "$1"); //$NON-NLS-1$ //$NON-NLS-2$
+				if (tagElement == null && text.equals("<pre>")) { //$NON-NLS-1$
+					++fPreCounter;
+				} else if (tagElement == null && text.equals("</pre>")) { //$NON-NLS-1$
+					--fPreCounter;
+				} else if (tagElement == null && fPreCounter > 0 && text.matches("}\\s*</pre>")) { //$NON-NLS-1$
+					// this is a temporary workaround for https://github.com/eclipse-jdt/eclipse.jdt.ui/issues/316
+					// as the parser for @code is treating the first } it finds as the end of the code
+					// sequence but this is not the case for a <pre>{@code sequence which goes over
+					// multiple lines and may contain }'s that are part of the code
+					--fPreCounter;
+					text= "</code></pre>"; //$NON-NLS-1$
+					int lastCodeEnd= fBuf.lastIndexOf("</code>"); //$NON-NLS-1$
+					fBuf.replace(lastCodeEnd, lastCodeEnd + 7, ""); //$NON-NLS-1$
+				}
 				handleText(text);
 			} else if (child instanceof TagElement) {
 				handleInlineTagElement((TagElement) child);
@@ -1483,6 +1514,7 @@ public class JavadocContentAccess2 {
 		boolean isLiteral= TagElement.TAG_LITERAL.equals(name);
 		boolean isSummary = TagElement.TAG_SUMMARY.equals(name);
 		boolean isIndex = TagElement.TAG_INDEX.equals(name);
+		boolean isSnippet = TagElement.TAG_SNIPPET.equals(name);
 
 		if (isLiteral || isCode || isSummary || isIndex)
 			fLiteralContent++;
@@ -1496,7 +1528,10 @@ public class JavadocContentAccess2 {
 		else if (isIndex)
 			handleIndex(node.fragments());
 		else if (isCode || isLiteral)
-			handleContentElements(node.fragments(), true);
+			handleContentElements(node.fragments(), true, node);
+		else if (isSnippet) {
+			handleSnippet(node);
+		}
 		else if (handleInheritDoc(node) || handleDocRoot(node)) {
 			// Handled
 		} else {
@@ -1508,6 +1543,8 @@ public class JavadocContentAccess2 {
 
 		if (isLink || isCode)
 			fBuf.append("</code>"); //$NON-NLS-1$
+		if (isSnippet)
+			fBuf.append("</code></pre>"); //$NON-NLS-1$
 		if (isLiteral || isCode)
 			fLiteralContent--;
 
@@ -1905,6 +1942,43 @@ public class JavadocContentAccess2 {
 				return;
 			}
 		}
+	}
+
+	private void handleSnippet(TagElement node) {
+		if (node != null) {
+			Object val = node.getProperty(TagProperty.TAG_PROPERTY_SNIPPET_IS_VALID);
+			Object valError = node.getProperty(TagProperty.TAG_PROPERTY_SNIPPET_ERROR);
+			if (val instanceof Boolean
+					&& ((Boolean)val).booleanValue() && valError == null) {
+				int fs= node.fragments().size();
+				if (fs > 0) {
+					fBuf.append("<pre>"); //$NON-NLS-1$
+					Object valID = node.getProperty(TagProperty.TAG_PROPERTY_SNIPPET_ID);
+					if (valID instanceof String && !valID.toString().isBlank()) {
+						fBuf.append("<code id=" +valID.toString()+">" ); //$NON-NLS-1$ //$NON-NLS-2$
+					} else {
+						fBuf.append("<code>") ;//$NON-NLS-1$
+					}
+					fBuf.append(BlOCK_TAG_ENTRY_START);
+					fSnippetStringEvaluator.AddTagElementString(node, fBuf);
+					fBuf.append(BlOCK_TAG_ENTRY_END);
+				}
+			} else {
+				handleInvalidSnippet(node);
+			}
+		}
+	}
+
+	private void handleInvalidSnippet(TagElement node) {
+		fBuf.append("<pre><code>\n"); //$NON-NLS-1$
+		fBuf.append("<mark>invalid @Snippet</mark>"); //$NON-NLS-1$
+		Object val = node.getProperty(TagProperty.TAG_PROPERTY_SNIPPET_ERROR);
+		if (val instanceof String) {
+			fBuf.append("<br><p>"+val+"</p>"); //$NON-NLS-1$ //$NON-NLS-2$
+
+		}
+
+
 	}
 
 	private void handleIndex(List<? extends ASTNode> fragments) {

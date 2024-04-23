@@ -25,7 +25,7 @@
 
   <!-- Eclipse Java Code Manipulation Functionality -->
   <target name="org.eclipse.jdt.core.manipulation" depends="org.eclipse.ltk.core.refactoring">
-    <make-bundle name="org.eclipse.jdt.core.manipulation" basedir="." depends="org.eclipse.ltk.core.refactoring">
+    <make-bundle name="org.eclipse.jdt.core.manipulation" basedir="." depends="org.eclipse.ltk.core.refactoring" release="11">
       <pathelement path="/usr/share/java/eclipse-core-contenttype.jar"/>
       <pathelement path="/usr/share/java/eclipse-core-expressions.jar"/>
       <pathelement path="/usr/share/java/eclipse-core-filebuffers.jar"/>
@@ -68,7 +68,7 @@
 
   <!-- Eclipse Java Development Tools JUnit core support -->
   <target name="org.eclipse.jdt.junit.core" depends="org.eclipse.jdt.junit.runtime">
-    <make-bundle name="org.eclipse.jdt.junit.core" basedir="." depends="org.eclipse.jdt.junit.runtime">
+    <make-bundle name="org.eclipse.jdt.junit.core" basedir="." depends="org.eclipse.jdt.junit.runtime" release="11">
       <pathelement path="/usr/share/java/eclipse-core-expressions.jar"/>
       <pathelement path="/usr/share/java/eclipse-core-jobs.jar"/>
       <pathelement path="/usr/share/java/eclipse-core-resources.jar"/>
@@ -100,7 +100,7 @@
 
   <!-- Eclipse Java Development Tools UI -->
   <target name="org.eclipse.jdt.ui" depends="org.eclipse.jdt.core.manipulation,org.eclipse.ltk.core.refactoring,org.eclipse.ltk.ui.refactoring">
-    <make-bundle name="org.eclipse.jdt.ui" basedir="." depends="org.eclipse.jdt.core.manipulation,org.eclipse.ltk.core.refactoring,org.eclipse.ltk.ui.refactoring">
+    <make-bundle name="org.eclipse.jdt.ui" basedir="." depends="org.eclipse.jdt.core.manipulation,org.eclipse.ltk.core.refactoring,org.eclipse.ltk.ui.refactoring" release="11">
       <pathelement path="/usr/share/java/eclipse-compare.jar"/>
       <pathelement path="/usr/share/java/eclipse-compare-core.jar"/>
       <pathelement path="/usr/share/java/eclipse-core-commands.jar"/>

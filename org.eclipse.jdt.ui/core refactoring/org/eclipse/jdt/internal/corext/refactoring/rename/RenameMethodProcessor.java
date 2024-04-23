@@ -446,6 +446,9 @@ public abstract class RenameMethodProcessor extends JavaRenameProcessor implemen
 	private IMethod[] searchForDeclarationsOfClashingMethods(IProgressMonitor pm) throws CoreException {
 		final List<IMethod> results= new ArrayList<>();
 		SearchPattern pattern= createNewMethodPattern();
+		if (pattern == null) {
+			return new IMethod[0];
+		}
 		IJavaSearchScope scope= RefactoringScopeFactory.create(getMethod().getJavaProject());
 		SearchRequestor requestor= new SearchRequestor() {
 			@Override
@@ -616,7 +619,7 @@ public abstract class RenameMethodProcessor extends JavaRenameProcessor implemen
 
 		SearchPattern refsPattern= RefactoringSearchEngine.createOrPattern(wcNewMethods, IJavaSearchConstants.REFERENCES);
 		SearchParticipant[] searchParticipants= SearchUtils.getDefaultSearchParticipants();
-		IJavaSearchScope scope= RefactoringScopeFactory.create(wcNewMethods);
+		IJavaSearchScope scope= RefactoringScopeFactory.createProjectsScope(wcNewMethods, true);
 
 		MethodOccurenceCollector requestor;
 		if (getDelegateUpdating()) {

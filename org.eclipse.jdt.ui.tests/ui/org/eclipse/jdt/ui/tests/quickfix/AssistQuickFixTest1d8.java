@@ -947,7 +947,7 @@ public class AssistQuickFixTest1d8 extends QuickFixTest {
 		assertNoErrors(context);
 		List<IJavaCompletionProposal> proposals= collectAssists(context, false);
 
-		assertNumberOfProposals(proposals, 2);
+		assertNumberOfProposals(proposals, 3);
 		assertCorrectLabels(proposals);
 
 		buf= new StringBuilder();
@@ -2615,6 +2615,202 @@ public class AssistQuickFixTest1d8 extends QuickFixTest {
 		assertNumberOfProposals(proposals, 3);
 		assertCorrectLabels(proposals);
 		assertProposalDoesNotExist(proposals, CorrectionMessages.QuickAssistProcessor_change_lambda_body_to_expression);
+	}
+
+	@Test
+	public void testExtractLambdaBodyToMethod1() throws Exception {
+		IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
+		StringBuilder buf= new StringBuilder();
+		buf.append("package test1;\n");
+		buf.append("class E {\n");
+		buf.append("	public void foo1(int a) {\n");
+		buf.append("		FI2 k = (e) -> {\n");
+		buf.append("			int x = e + 3;\n");
+		buf.append("			if (x > 3) {\n");
+		buf.append("				return a;\n");
+		buf.append("			}\n");
+		buf.append("			return x;\n");
+		buf.append("		};\n");
+		buf.append("		k.foo(3);\n");
+		buf.append("	}\n");
+		buf.append("}\n");
+		buf.append("\n");
+		buf.append("@FunctionalInterface\n");
+		buf.append("interface FI2 {\n");
+		buf.append("    int foo(int x);\n");
+		buf.append("}\n");
+		ICompilationUnit cu= pack1.createCompilationUnit("E.java", buf.toString(), false, null);
+
+		int offset= buf.toString().indexOf("+");
+		AssistContext context= getCorrectionContext(cu, offset, 0);
+		assertNoErrors(context);
+		List<IJavaCompletionProposal> proposals= collectAssists(context, false);
+		assertCorrectLabels(proposals);
+		assertProposalDoesNotExist(proposals, CorrectionMessages.QuickAssistProcessor_extractmethod_description);
+		buf= new StringBuilder();
+		buf.append("package test1;\n");
+		buf.append("class E {\n");
+		buf.append("	public void foo1(int a) {\n");
+		buf.append("		FI2 k = (e) -> extracted(a, e);\n");
+		buf.append("		k.foo(3);\n");
+		buf.append("	}\n");
+		buf.append("\n");
+		buf.append("    private int extracted(int a, int e) {\n");
+		buf.append("        int x = e + 3;\n");
+		buf.append("        if (x > 3) {\n");
+		buf.append("        	return a;\n");
+		buf.append("        }\n");
+		buf.append("        return x;\n");
+		buf.append("    }\n");
+		buf.append("}\n");
+		buf.append("\n");
+		buf.append("@FunctionalInterface\n");
+		buf.append("interface FI2 {\n");
+		buf.append("    int foo(int x);\n");
+		buf.append("}\n");
+
+		String expected1= buf.toString();
+
+		assertExpectedExistInProposals(proposals, new String[] { expected1 });
+	}
+
+	@Test
+	public void testExtractLambdaBodyToMethod2() throws Exception {
+		IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
+		StringBuilder buf= new StringBuilder();
+		buf.append("package test1;\n");
+		buf.append("class E {\n");
+		buf.append("	public void foo1(int a) {\n");
+		buf.append("		FI2 k = (e) -> {\n");
+		buf.append("			int x = e + 3;\n");
+		buf.append("			if (x > 3) {\n");
+		buf.append("				return a;\n");
+		buf.append("			}\n");
+		buf.append("			return x;\n");
+		buf.append("		};\n");
+		buf.append("		k.foo(3);\n");
+		buf.append("	}\n");
+		buf.append("}\n");
+		buf.append("\n");
+		buf.append("@FunctionalInterface\n");
+		buf.append("interface FI2 {\n");
+		buf.append("    int foo(int x);\n");
+		buf.append("}\n");
+		ICompilationUnit cu= pack1.createCompilationUnit("E.java", buf.toString(), false, null);
+
+		int offset= buf.toString().indexOf("e + 3");
+		AssistContext context= getCorrectionContext(cu, offset, 5);
+		assertNoErrors(context);
+		List<IJavaCompletionProposal> proposals= collectAssists(context, false);
+		assertCorrectLabels(proposals);
+		buf= new StringBuilder();
+		buf.append("package test1;\n");
+		buf.append("class E {\n");
+		buf.append("	public void foo1(int a) {\n");
+		buf.append("		FI2 k = (e) -> extracted(a, e);\n");
+		buf.append("		k.foo(3);\n");
+		buf.append("	}\n");
+		buf.append("\n");
+		buf.append("    private int extracted(int a, int e) {\n");
+		buf.append("        int x = e + 3;\n");
+		buf.append("        if (x > 3) {\n");
+		buf.append("        	return a;\n");
+		buf.append("        }\n");
+		buf.append("        return x;\n");
+		buf.append("    }\n");
+		buf.append("}\n");
+		buf.append("\n");
+		buf.append("@FunctionalInterface\n");
+		buf.append("interface FI2 {\n");
+		buf.append("    int foo(int x);\n");
+		buf.append("}\n");
+
+		String expected1= buf.toString();
+
+		buf= new StringBuilder();
+		buf.append("package test1;\n");
+		buf.append("class E {\n");
+		buf.append("	public void foo1(int a) {\n");
+		buf.append("		FI2 k = (e) -> {\n");
+		buf.append("			int x = extracted(e);\n");
+		buf.append("			if (x > 3) {\n");
+		buf.append("				return a;\n");
+		buf.append("			}\n");
+		buf.append("			return x;\n");
+		buf.append("		};\n");
+		buf.append("		k.foo(3);\n");
+		buf.append("	}\n");
+		buf.append("\n");
+		buf.append("    private int extracted(int e) {\n");
+		buf.append("        return e + 3;\n");
+		buf.append("    }\n");
+		buf.append("}\n");
+		buf.append("\n");
+		buf.append("@FunctionalInterface\n");
+		buf.append("interface FI2 {\n");
+		buf.append("    int foo(int x);\n");
+		buf.append("}\n");
+
+		String expected2= buf.toString();
+		assertExpectedExistInProposals(proposals, new String[] { expected1, expected2 });
+	}
+
+	@Test
+	public void testExtractLambdaBodyToMethod3() throws Exception {
+		IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
+		StringBuilder buf= new StringBuilder();
+		buf.append("package test1;\n");
+		buf.append("class E {\n");
+		buf.append("	public void foo1(int a) {\n");
+		buf.append("		FI2 k = (e) -> {\n");
+		buf.append("			int x = e + 3;\n");
+		buf.append("            System.out.println(\"help\");\n");
+		buf.append("			if (x > 3) {\n");
+		buf.append("				return a;\n");
+		buf.append("			}\n");
+		buf.append("			return x;\n");
+		buf.append("		};\n");
+		buf.append("		k.foo(3);\n");
+		buf.append("	}\n");
+		buf.append("}\n");
+		buf.append("\n");
+		buf.append("@FunctionalInterface\n");
+		buf.append("interface FI2 {\n");
+		buf.append("    int foo(int x);\n");
+		buf.append("}\n");
+		ICompilationUnit cu= pack1.createCompilationUnit("E.java", buf.toString(), false, null);
+
+		int offset= buf.toString().indexOf("elp");
+		AssistContext context= getCorrectionContext(cu, offset, 5);
+		assertNoErrors(context);
+		List<IJavaCompletionProposal> proposals= collectAssists(context, false);
+		assertCorrectLabels(proposals);
+		buf= new StringBuilder();
+		buf.append("package test1;\n");
+		buf.append("class E {\n");
+		buf.append("	public void foo1(int a) {\n");
+		buf.append("		FI2 k = (e) -> extracted(a, e);\n");
+		buf.append("		k.foo(3);\n");
+		buf.append("	}\n");
+		buf.append("\n");
+		buf.append("    private int extracted(int a, int e) {\n");
+		buf.append("        int x = e + 3;\n");
+		buf.append("        System.out.println(\"help\");\n");
+		buf.append("        if (x > 3) {\n");
+		buf.append("        	return a;\n");
+		buf.append("        }\n");
+		buf.append("        return x;\n");
+		buf.append("    }\n");
+		buf.append("}\n");
+		buf.append("\n");
+		buf.append("@FunctionalInterface\n");
+		buf.append("interface FI2 {\n");
+		buf.append("    int foo(int x);\n");
+		buf.append("}\n");
+
+		String expected1= buf.toString();
+
+		assertExpectedExistInProposals(proposals, new String[] { expected1 });
 	}
 
 	@Test
@@ -4477,7 +4673,7 @@ public class AssistQuickFixTest1d8 extends QuickFixTest {
 		context= getCorrectionContext(cu, offset, 0);
 		assertNoErrors(context);
 		proposals= collectAssists(context, false);
-		assertNumberOfProposals(proposals, 1);
+		assertNumberOfProposals(proposals, 2);
 		assertCorrectLabels(proposals);
 		buf= new StringBuilder();
 		buf.append("package test1;\n");
@@ -5573,7 +5769,7 @@ public class AssistQuickFixTest1d8 extends QuickFixTest {
 		assertNumberOfProposals(proposals, 4);
 		assertCorrectLabels(proposals);
 
-		CUCorrectionProposal proposal= (CUCorrectionProposal) proposals.get(0);
+		CUCorrectionProposal proposal= (CUCorrectionProposal) findProposalByName("Surround with try-with-resources", proposals);
 		String preview1= getPreviewContent(proposal);
 
 		StringBuilder buf= new StringBuilder();
@@ -5606,7 +5802,7 @@ public class AssistQuickFixTest1d8 extends QuickFixTest {
 		assertNumberOfProposals(proposals, 4);
 		assertCorrectLabels(proposals);
 
-		proposal= (CUCorrectionProposal) proposals.get(0);
+		proposal= (CUCorrectionProposal) findProposalByName("Surround with try-with-resources", proposals);
 		String preview2= getPreviewContent(proposal);
 
 		buf= new StringBuilder();
@@ -5671,7 +5867,7 @@ public class AssistQuickFixTest1d8 extends QuickFixTest {
 		assertNumberOfProposals(proposals, 4);
 		assertCorrectLabels(proposals);
 
-		CUCorrectionProposal proposal= (CUCorrectionProposal) proposals.get(0);
+		CUCorrectionProposal proposal= (CUCorrectionProposal) findProposalByName("Surround with try-with-resources", proposals);
 		String preview1= getPreviewContent(proposal);
 
 		StringBuilder buf= new StringBuilder();
@@ -5712,7 +5908,7 @@ public class AssistQuickFixTest1d8 extends QuickFixTest {
 		assertNumberOfProposals(proposals, 4);
 		assertCorrectLabels(proposals);
 
-		proposal= (CUCorrectionProposal) proposals.get(0);
+		proposal= (CUCorrectionProposal) findProposalByName("Surround with try-with-resources", proposals);
 		String preview2= getPreviewContent(proposal);
 
 		buf= new StringBuilder();
@@ -5787,7 +5983,7 @@ public class AssistQuickFixTest1d8 extends QuickFixTest {
 
 		assertCorrectLabels(proposals);
 
-		CUCorrectionProposal proposal= (CUCorrectionProposal) proposals.get(0);
+		CUCorrectionProposal proposal= (CUCorrectionProposal) findProposalByName("Surround with try-with-resources", proposals);
 		String preview1= getPreviewContent(proposal);
 
 		StringBuilder buf= new StringBuilder();
@@ -5856,7 +6052,7 @@ public class AssistQuickFixTest1d8 extends QuickFixTest {
 
 		assertCorrectLabels(proposals);
 
-		CUCorrectionProposal proposal= (CUCorrectionProposal) proposals.get(0);
+		CUCorrectionProposal proposal= (CUCorrectionProposal) findProposalByName("Surround with try-with-resources", proposals);
 		String preview1= getPreviewContent(proposal);
 
 		StringBuilder buf= new StringBuilder();
@@ -5890,6 +6086,64 @@ public class AssistQuickFixTest1d8 extends QuickFixTest {
 		assertEqualStringsIgnoreOrder(new String[] { preview1 }, new String[] { expected1 });
 		assertCorrectLabels(proposals);
 	}
+
+	@Test
+	public void testSurroundWithTryWithResource_05() throws Exception {
+		IPackageFragment pack1= fSourceFolder.createPackageFragment("p", false, null);
+		StringBuilder bufOrg= new StringBuilder();
+		bufOrg.append("package p;\n");
+		bufOrg.append("\n");
+		bufOrg.append("import java.io.File;\n"
+				+ "import java.util.stream.Stream;\n"
+				+ "\n"
+				+ "public class X {\n"
+				+ "	public static void main(String[] args) throws Exception {\n"
+				+ "		try {\n"
+				+ "			try {\n"
+				+ "				Stream<File> stream = Stream.of(new File(\"\"));\n"
+				+ "				System.out.println(stream);\n"
+				+ "			} catch (Exception e) {\n"
+				+ "			}\n"
+				+ "		} catch (Exception e) {\n"
+				+ "		}\n"
+				+ "	}\n"
+				+ "}");
+
+		ICompilationUnit cu= pack1.createCompilationUnit("X.java", bufOrg.toString(), false, null);
+
+		int cursor = bufOrg.toString().indexOf("Stream<File>");
+		AssistContext context= getCorrectionContext(cu, cursor + 1, 0);
+		List<IJavaCompletionProposal> proposals= collectAssists(context, false);
+
+		assertCorrectLabels(proposals);
+
+		CUCorrectionProposal proposal= (CUCorrectionProposal) findProposalByName("Surround with try-with-resources", proposals);
+		String preview1= getPreviewContent(proposal);
+
+		StringBuilder buf= new StringBuilder();
+		buf.append("package p;\n");
+		buf.append("\n");
+		buf.append("import java.io.File;\n"
+				+ "import java.util.stream.Stream;\n"
+				+ "\n"
+				+ "public class X {\n"
+				+ "	public static void main(String[] args) throws Exception {\n"
+				+ "		try {\n"
+				+ "			try (Stream<File> stream = Stream.of(new File(\"\"))) {\n"
+				+ "				System.out.println(stream);\n"
+				+ "			} catch (Exception e) {\n"
+				+ "			}\n"
+				+ "		} catch (Exception e) {\n"
+				+ "		}\n"
+				+ "	}\n"
+				+ "}");
+		String expected1= buf.toString();
+
+		assertEqualStringsIgnoreOrder(new String[] { preview1 }, new String[] { expected1 });
+		assertCorrectLabels(proposals);
+	}
+
+
 	@Test
 	public void testWrapInOptional_01() throws Exception {
 		IPackageFragment pack1= fSourceFolder.createPackageFragment("p", false, null);

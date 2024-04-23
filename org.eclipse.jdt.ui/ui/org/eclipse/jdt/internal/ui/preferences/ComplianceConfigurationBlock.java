@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -21,6 +21,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import com.ibm.icu.text.MessageFormat;
+
 import org.osgi.service.prefs.Preferences;
 
 import org.eclipse.swt.SWT;
@@ -40,6 +42,7 @@ import org.eclipse.swt.widgets.Link;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.preferences.BundleDefaultsScope;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -55,8 +58,10 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.preferences.IWorkbenchPreferenceContainer;
 
+import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 
 import org.eclipse.jdt.internal.core.manipulation.util.BasicElementLabels;
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
@@ -67,10 +72,13 @@ import org.eclipse.jdt.launching.IVMInstall2;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.environments.IExecutionEnvironment;
 
+import org.eclipse.jdt.ui.JavaUI;
+
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.dialogs.StatusInfo;
 import org.eclipse.jdt.internal.ui.wizards.IStatusChangeListener;
 import org.eclipse.jdt.internal.ui.wizards.buildpaths.BuildPathSupport;
+import org.eclipse.jdt.internal.ui.wizards.buildpaths.LibrariesWorkbookPage;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.LayoutUtil;
 
 
@@ -144,6 +152,9 @@ public class ComplianceConfigurationBlock extends OptionsConfigurationBlock {
 	private static final String VERSION_14 = JavaCore.VERSION_14;
 	private static final String VERSION_15 = JavaCore.VERSION_15;
 	private static final String VERSION_16 = JavaCore.VERSION_16;
+	private static final String VERSION_17 = JavaCore.VERSION_17;
+	private static final String VERSION_18 = JavaCore.VERSION_18;
+	private static final String VERSION_19 = JavaCore.VERSION_19;
 	private static final String VERSION_LATEST = JavaCore.latestSupportedJavaVersion();
 	private static final String VERSION_JSR14= "jsr14"; //$NON-NLS-1$
 
@@ -301,7 +312,7 @@ public class ComplianceConfigurationBlock extends OptionsConfigurationBlock {
 	private Composite createComplianceTabContent(Composite folder) {
 
 		final String[] complianceVersions= new String[] { VERSION_1_3, VERSION_1_4,
-				VERSION_1_5, VERSION_1_6, VERSION_1_7, VERSION_1_8, VERSION_9, VERSION_10, VERSION_11, VERSION_12, VERSION_13, VERSION_14, VERSION_15, VERSION_16 };
+				VERSION_1_5, VERSION_1_6, VERSION_1_7, VERSION_1_8, VERSION_9, VERSION_10, VERSION_11, VERSION_12, VERSION_13, VERSION_14, VERSION_15, VERSION_16, VERSION_17, VERSION_18, VERSION_19 };
 		final String[] complianceLabels= new String[] {
 			PreferencesMessages.ComplianceConfigurationBlock_version13,
 			PreferencesMessages.ComplianceConfigurationBlock_version14,
@@ -317,10 +328,13 @@ public class ComplianceConfigurationBlock extends OptionsConfigurationBlock {
 			PreferencesMessages.ComplianceConfigurationBlock_version_14,
 			PreferencesMessages.ComplianceConfigurationBlock_version_15,
 			PreferencesMessages.ComplianceConfigurationBlock_version_16,
+			PreferencesMessages.ComplianceConfigurationBlock_version_17,
+			PreferencesMessages.ComplianceConfigurationBlock_version_18,
+			PreferencesMessages.ComplianceConfigurationBlock_version_19
 		};
 
 		String[] targetVersions= new String[] { VERSION_CLDC_1_1, VERSION_1_1, VERSION_1_2, VERSION_1_3, VERSION_1_4,
-				VERSION_1_5, VERSION_1_6, VERSION_1_7, VERSION_1_8, VERSION_9, VERSION_10, VERSION_11, VERSION_12, VERSION_13, VERSION_14, VERSION_15, VERSION_16 };
+				VERSION_1_5, VERSION_1_6, VERSION_1_7, VERSION_1_8, VERSION_9, VERSION_10, VERSION_11, VERSION_12, VERSION_13, VERSION_14, VERSION_15, VERSION_16, VERSION_17, VERSION_18, VERSION_19 };
 		String[] targetLabels= new String[] {
 				PreferencesMessages.ComplianceConfigurationBlock_versionCLDC11,
 				PreferencesMessages.ComplianceConfigurationBlock_version11,
@@ -339,6 +353,9 @@ public class ComplianceConfigurationBlock extends OptionsConfigurationBlock {
 				PreferencesMessages.ComplianceConfigurationBlock_version_14,
 				PreferencesMessages.ComplianceConfigurationBlock_version_15,
 				PreferencesMessages.ComplianceConfigurationBlock_version_16,
+				PreferencesMessages.ComplianceConfigurationBlock_version_17,
+				PreferencesMessages.ComplianceConfigurationBlock_version_18,
+				PreferencesMessages.ComplianceConfigurationBlock_version_19
 		};
 		if (ComplianceConfigurationBlock.VERSION_JSR14.equals(getValue(PREF_CODEGEN_TARGET_PLATFORM))) {
 			targetVersions= append(targetVersions, ComplianceConfigurationBlock.VERSION_JSR14);
@@ -346,7 +363,7 @@ public class ComplianceConfigurationBlock extends OptionsConfigurationBlock {
 		}
 
 		String[] sourceVersions= new String[] { VERSION_1_3, VERSION_1_4,
-				VERSION_1_5, VERSION_1_6, VERSION_1_7, VERSION_1_8, VERSION_9, VERSION_10, VERSION_11, VERSION_12, VERSION_13, VERSION_14, VERSION_15, VERSION_16 };
+				VERSION_1_5, VERSION_1_6, VERSION_1_7, VERSION_1_8, VERSION_9, VERSION_10, VERSION_11, VERSION_12, VERSION_13, VERSION_14, VERSION_15, VERSION_16, VERSION_17, VERSION_18, VERSION_19 };
 		String[] sourceLabels= new String[] {
 				PreferencesMessages.ComplianceConfigurationBlock_version13,
 				PreferencesMessages.ComplianceConfigurationBlock_version14,
@@ -362,6 +379,9 @@ public class ComplianceConfigurationBlock extends OptionsConfigurationBlock {
 				PreferencesMessages.ComplianceConfigurationBlock_version_14,
 				PreferencesMessages.ComplianceConfigurationBlock_version_15,
 				PreferencesMessages.ComplianceConfigurationBlock_version_16,
+				PreferencesMessages.ComplianceConfigurationBlock_version_17,
+				PreferencesMessages.ComplianceConfigurationBlock_version_18,
+				PreferencesMessages.ComplianceConfigurationBlock_version_19
 		};
 
 		final ScrolledPageContent sc1 = new ScrolledPageContent(folder);
@@ -621,6 +641,16 @@ public class ComplianceConfigurationBlock extends OptionsConfigurationBlock {
 				updateComplianceDefaultSettings(true, null);
 				fComplianceStatus= validateCompliance();
 				validateComplianceStatus();
+				if (fComplianceStatus.isOK() && ENABLED.equals(getValue(PREF_RELEASE))) {
+					String exportOptionValue= addsExportToSystemModule();
+					if (exportOptionValue != null) {
+						int slash = exportOptionValue.indexOf('/');
+						if (slash > -1) {
+							fComplianceStatus = new Status(IStatus.ERROR, JavaUI.ID_PLUGIN,
+									MessageFormat.format(PreferencesMessages.ComplianceConfigurationBlock_release_notWith_addExports_error, exportOptionValue.substring(0, slash)));
+						}
+					}
+				}
 			} else if (PREF_SOURCE_COMPATIBILITY.equals(changedKey)) {
 				updatePreviewFeaturesState();
 				updateAssertEnumAsIdentifierEnableState();
@@ -811,9 +841,9 @@ public class ComplianceConfigurationBlock extends OptionsConfigurationBlock {
 				}
 			}
 
-			//TODO: Comment once Java SE 16 has been shipped:
+//			//TODO: Comment once Java SE 19 has been shipped:
 //			String selectedCompliance= getValue(PREF_COMPLIANCE);
-//			if (VERSION_16.equals(selectedCompliance)) {
+//			if (VERSION_19.equals(selectedCompliance)) {
 //				fJRE50InfoText.setText(
 //						"This is an implementation of an early-draft specification developed under the Java Community Process (JCP) and is made available for testing and evaluation purposes only. The code is not compatible with any specification of the JCP."); //$NON-NLS-1$
 //				isVisible= true;
@@ -823,6 +853,24 @@ public class ComplianceConfigurationBlock extends OptionsConfigurationBlock {
 			fJRE50InfoImage.setImage(isVisible ? image : null);
 			fJRE50InfoImage.getParent().layout();
 		}
+	}
+
+	private String addsExportToSystemModule() {
+		try {
+			for (IClasspathEntry cpe : JavaCore.create(fProject).getRawClasspath()) {
+				if (cpe.getEntryKind() == IClasspathEntry.CPE_CONTAINER && LibrariesWorkbookPage.isJREContainer(cpe.getPath())) {
+					for (IClasspathAttribute attribute : cpe.getExtraAttributes()) {
+						if (IClasspathAttribute.ADD_EXPORTS.equals(attribute.getName())) {
+							return attribute.getValue();
+						}
+					}
+					break;
+				}
+			}
+		} catch (JavaModelException e) {
+			return null;
+		}
+		return null;
 	}
 
 	private void updateReleaseOptionStatus() {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019, 2021 IBM Corporation and others.
+ * Copyright (c) 2019, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -13,6 +13,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.ui.tests.quickfix;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 
@@ -20,24 +21,44 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Hashtable;
 
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
+
+import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
+
+import org.eclipse.ui.IEditorInput;
 
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 
+import org.eclipse.jdt.internal.corext.dom.IASTSharedValues;
 import org.eclipse.jdt.internal.corext.fix.CleanUpConstants;
 import org.eclipse.jdt.internal.corext.fix.FixMessages;
 
+import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
+import org.eclipse.jdt.ui.cleanup.ICleanUpFix;
 import org.eclipse.jdt.ui.tests.core.rules.Java1d5ProjectTestSetup;
 import org.eclipse.jdt.ui.tests.core.rules.ProjectTestSetup;
+import org.eclipse.jdt.ui.text.java.IProblemLocation;
 
+import org.eclipse.jdt.internal.ui.fix.IMultiFix;
+import org.eclipse.jdt.internal.ui.fix.Java50CleanUp;
 import org.eclipse.jdt.internal.ui.fix.MultiFixMessages;
+import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
+import org.eclipse.jdt.internal.ui.text.correction.CorrectionMarkerResolutionGenerator;
 
 /**
  * Tests the cleanup features related to Java 5 (i.e. Tiger).
@@ -1229,6 +1250,123 @@ public class CleanUpTest1d5 extends CleanUpTestCase {
 	}
 
 	@Test
+	public void testJava50ForLoopBug578910() throws Exception {
+		IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
+		String sample= "" //
+				+ "package test1;\n" //
+				+ "import java.util.Iterator;\n" //
+				+ "import java.util.Map;\n" //
+				+ "\n" //
+				+ "public class E1 {\n" //
+				+ "\n" //
+				+ "    public void foo(Map<String, String> extensionMap) {\n" //
+				+ "	       for (Iterator<String> iterator = extensionMap.keySet().iterator(); iterator.hasNext();) {\n" //
+				+ "	   	       try {\n" //
+				+ "	               String expression = iterator.next();\n" //
+				+ "	               System.out.println(expression);\n" //
+				+ "	           } catch (Exception e) {\n" //
+				+ "	           }\n" //
+				+ "	       }\n" //
+				+ "	       int j = 7;\n" //
+				+ "	       for (Iterator<String> iterator = extensionMap.keySet().iterator(); iterator.hasNext();) {\n" //
+				+ "	           do {\n" //
+				+ "	               String expression = iterator.next();\n" //
+				+ "	               System.out.println(expression);\n" //
+				+ "	           } while (j-- > 0);\n" //
+				+ "	       }\n" //
+				+ "	       for (Iterator<String> iterator = extensionMap.keySet().iterator(); iterator.hasNext();) {\n" //
+				+ "	           String expression = null;\n" //
+				+ "	           if (extensionMap != null) {\n" //
+				+ "	               expression = iterator.next();\n" //
+				+ "            }\n" //
+				+ "	           System.out.println(expression);\n" //
+				+ "	       }\n" //
+				+ "    }\n" //
+				+ "}";
+		ICompilationUnit cu1= pack1.createCompilationUnit("E1.java", sample, false, null);
+
+		enable(CleanUpConstants.CONTROL_STATEMENTS_CONVERT_FOR_LOOP_TO_ENHANCED);
+
+		sample= "" //
+				+ "package test1;\n" //
+				+ "import java.util.Map;\n" //
+				+ "\n" //
+				+ "public class E1 {\n" //
+				+ "\n" //
+				+ "    public void foo(Map<String, String> extensionMap) {\n" //
+				+ "	       for (String expression : extensionMap.keySet()) {\n" //
+				+ "	   	       try {\n" //
+				+ "	               System.out.println(expression);\n" //
+				+ "	           } catch (Exception e) {\n" //
+				+ "	           }\n" //
+				+ "	       }\n" //
+				+ "	       int j = 7;\n" //
+				+ "	       for (String expression : extensionMap.keySet()) {\n" //
+				+ "	           do {\n" //
+				+ "	               System.out.println(expression);\n" //
+				+ "	           } while (j-- > 0);\n" //
+				+ "	       }\n" //
+				+ "	       for (String expression : extensionMap.keySet()) {\n" //
+				+ "	           if (extensionMap != null) {\n" //
+				+ "            }\n" //
+				+ "	           System.out.println(expression);\n" //
+				+ "	       }\n" //
+				+ "    }\n" //
+				+ "}";
+		String expected1= sample;
+
+		assertRefactoringResultAsExpected(new ICompilationUnit[] { cu1 }, new String[] { expected1 }, null);
+	}
+
+    @Test
+    public void testJava50ForLoopIssue109() throws Exception {
+            IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
+            String sample= "" //
+                            + "package test1;\n" //
+                            + "import java.util.List;\n" //
+                            + "import java.util.ArrayList;\n" //
+                            + "public class E1 {\n" //
+                            + "    public void foo() {\n" //
+                            + "        List<String> list1 = new ArrayList();\n" //
+                            + "        for (int i = 0; i < list1.size(); i++) {\n" //
+                            + "            String s1 = list1.get(i);\n" //
+                            + "            String s2 = list1.get(i);\n" //
+                            + "            System.out.println(s1 + \",\" + s2); //$NON-NLS-1\n" //
+                            + "        }\n" //
+                            + "        for (int i = 0; i < list1.size(); i++) {\n" //
+                            + "            System.out.println(list1.get(i));\n" //
+                            + "            System.out.println(list1.get(i));\n"	//
+                            + "        }\n" //
+                            + "    }\n" //
+                            + "}\n";
+
+            ICompilationUnit cu1= pack1.createCompilationUnit("E1.java", sample, false, null);
+
+            enable(CleanUpConstants.CONTROL_STATEMENTS_CONVERT_FOR_LOOP_TO_ENHANCED);
+
+            sample= "" //
+                    + "package test1;\n" //
+                    + "import java.util.List;\n" //
+                    + "import java.util.ArrayList;\n" //
+                    + "public class E1 {\n" //
+                    + "    public void foo() {\n" //
+                    + "        List<String> list1 = new ArrayList();\n" //
+                    + "        for (String s1 : list1) {\n" //
+                    + "            String s2 = s1;\n" //
+                    + "            System.out.println(s1 + \",\" + s2); //$NON-NLS-1\n" //
+                    + "        }\n" //
+                    + "        for (String element : list1) {\n" //
+                    + "            System.out.println(element);\n" //
+                    + "            System.out.println(element);\n"	//
+                    + "        }\n" //
+                    + "    }\n" //
+                    + "}\n";
+            String expected1= sample;
+
+    		assertRefactoringResultAsExpected(new ICompilationUnit[] { cu1 }, new String[] { expected1 }, null);
+    }
+
+    @Test
 	public void testBug550726() throws Exception {
 		IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
 		String sample= "" //
@@ -2343,12 +2481,30 @@ public class CleanUpTest1d5 extends CleanUpTestCase {
 	}
 
 	@Test
-	public void testDoNotUseAutoboxingOnString() throws Exception {
+	public void testDoNotUseAutoboxing() throws Exception {
 		IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
 		String sample= "" //
 				+ "package test1;\n" //
 				+ "\n" //
+				+ "import java.util.List;\n" //
+				+ "\n" //
 				+ "public class E1 {\n" //
+				+ "    public static int dummyMethod(Byte byObject) {\n" //
+				+ "        return 1;\n" //
+				+ "    }\n" //
+				+ "\n" //
+				+ "    public static int dummyMethod(byte byPrimitive) {\n" //
+				+ "        return 2;\n" //
+				+ "    }\n" //
+				+ "\n" //
+				+ "    public static void doNotCleanupOnConflictingMethod(byte byPrimitive) {\n" //
+				+ "        dummyMethod(Byte.valueOf(byPrimitive));\n" //
+				+ "    }\n" //
+				+ "\n" //
+				+ "    public static void doNotCleanupOnOverloadedMethod(List<Integer> integers, int notAnIndex) {\n" //
+				+ "        integers.remove(Integer.valueOf(notAnIndex));\n" //
+				+ "    }\n" //
+				+ "\n" //
 				+ "    public static void doNotUseAutoboxingOnString() {\n" //
 				+ "        Integer i = Integer.valueOf(\"1\");\n" //
 				+ "        Long l = Long.valueOf(\"1\");\n" //
@@ -2612,6 +2768,22 @@ public class CleanUpTest1d5 extends CleanUpTestCase {
 				+ "package test1;\n" //
 				+ "\n" //
 				+ "public class E1 {\n" //
+				+ "    public static int dummyMethod(Byte byObject) {\n" //
+				+ "        return 1;\n" //
+				+ "    }\n" //
+				+ "\n" //
+				+ "    public static int dummyMethod(byte byPrimitive) {\n" //
+				+ "        return 2;\n" //
+				+ "    }\n" //
+				+ "\n" //
+				+ "    public static void doNotCleanupOnConflictingMethod(Byte byObject) {\n" //
+				+ "        dummyMethod(byObject.byteValue());\n" //
+				+ "    }\n" //
+				+ "\n" //
+				+ "    public static void doNotCleanupOnOverloadedMethod(StringBuilder builder, Character optimizedObject) {\n" //
+				+ "        builder.append(optimizedObject.charValue());\n" //
+				+ "    }\n" //
+				+ "\n" //
 				+ "    public static void doNotUseUnboxingOnNarrowingType(Character cObject, Byte byObject,\n" //
 				+ "            Integer iObject, Short sObject, Float fObject) {\n" //
 				+ "        int c = cObject.charValue();\n" //
@@ -2619,6 +2791,16 @@ public class CleanUpTest1d5 extends CleanUpTestCase {
 				+ "        long i = iObject.intValue();\n" //
 				+ "        int s = sObject.shortValue();\n" //
 				+ "        double f = fObject.floatValue();\n" //
+				+ "    }\n" //
+				+ "\n" //
+				+ "    public static void doNotUseUnboxingOnCastCalls(Character cObject, Byte byObject,\n" //
+				+ "            Integer iObject, Short sObject, Float fObject, Object unknown) {\n" //
+				+ "        int c = (int)cObject.charValue();\n" //
+				+ "        int by = (int)byObject.byteValue();\n" //
+				+ "        long i = (long)iObject.intValue();\n" //
+				+ "        int s = (int)sObject.shortValue();\n" //
+				+ "        double f = (double)fObject.floatValue();\n" //
+				+ "        byte b = (byte)((Integer)unknown).intValue();\n" //
 				+ "    }\n" //
 				+ "\n" //
 				+ "    public static void doNotUseUnboxingWhenTypesDontMatch(Byte byObject,\n" //
@@ -4083,6 +4265,69 @@ public class CleanUpTest1d5 extends CleanUpTestCase {
 
 		assertRefactoringResultAsExpected(new ICompilationUnit[] { cu0, cu1 }, new String[] { expected0, expected1 },
 				new HashSet<>(Arrays.asList(MultiFixMessages.StringBufferToStringBuilderCleanUp_description)));
+	}
+
+	@Test
+	public void testOverrideMultiFix() throws Exception {
+		Hashtable<String, String> opts= JavaCore.getOptions();
+		opts.put(JavaCore.COMPILER_PB_MISSING_OVERRIDE_ANNOTATION, JavaCore.ERROR);
+		JavaCore.setOptions(opts);
+
+		IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
+		String sample= "" //
+				+ "package test1;\n" //
+				+ "public class E1 extends MyAbstract {\n" //
+				+ "    public void run() {};\n" //
+				+ "    public int compareTo(String o) { return -1; };\n" //
+				+ "}\n";
+		ICompilationUnit cu1= pack1.createCompilationUnit("E1.java", sample, false, null);
+		sample= "" //
+				+ "package test1;\n" //
+				+ "public abstract class MyAbstract {\n" //
+				+ "    public void run();\n" //
+				+ "    public int compareTo(String o);\n" //
+				+ "}";
+		pack1.createCompilationUnit("MyAbstract.java", sample, false, null);
+
+		cu1.getJavaProject().getProject().build(IncrementalProjectBuilder.FULL_BUILD, null);
+
+		sample= "" //
+				+ "package test1;\n" //
+				+ "public class E1 extends MyAbstract {\n" //
+				+ "    @Override\n" //
+				+ "    public void run() {};\n" //
+				+ "    @Override\n" //
+				+ "    public int compareTo(String o) { return -1; };\n" //
+				+ "}\n";
+		String expected1= sample;
+
+		// Two error markers due to missing override annotations
+		IMarker[] markers= cu1.getResource().findMarkers(null, true, IResource.DEPTH_INFINITE);
+		assertEquals(2, markers.length);
+
+		IEditorInput input= EditorUtility.getEditorInput(cu1);
+		IProblemLocation location1= CorrectionMarkerResolutionGenerator.findProblemLocation(input, markers[0]);
+		IProblemLocation location2= CorrectionMarkerResolutionGenerator.findProblemLocation(input, markers[1]);
+
+		CleanUpOptions cleanUpOptions= new CleanUpOptions();
+		cleanUpOptions.setOption(CleanUpConstants.ADD_MISSING_ANNOTATIONS, CleanUpOptions.TRUE);
+		cleanUpOptions.setOption(CleanUpConstants.ADD_MISSING_ANNOTATIONS_OVERRIDE, CleanUpOptions.TRUE);
+		cleanUpOptions.setOption(CleanUpConstants.ADD_MISSING_ANNOTATIONS_OVERRIDE_FOR_INTERFACE_METHOD_IMPLEMENTATION, CleanUpOptions.TRUE);
+
+		Java50CleanUp cleanUp = new Java50CleanUp();
+		cleanUp.setOptions(cleanUpOptions);
+
+		ASTParser parser= ASTParser.newParser(IASTSharedValues.SHARED_AST_LEVEL);
+		parser.setResolveBindings(true);
+		parser.setProject(getProject());
+		parser.setSource(cu1);
+		CompilationUnit ast= (CompilationUnit)parser.createAST(null);
+
+		ICleanUpFix cleanUpFix= cleanUp.createFix(new IMultiFix.MultiFixContext(cu1, ast, new IProblemLocation[] {location1, location2}));
+		CompilationUnitChange change= cleanUpFix.createChange(new NullProgressMonitor());
+		change.perform(new NullProgressMonitor());
+		assertEquals(expected1, cu1.getBuffer().getContents());
+
 	}
 
 }

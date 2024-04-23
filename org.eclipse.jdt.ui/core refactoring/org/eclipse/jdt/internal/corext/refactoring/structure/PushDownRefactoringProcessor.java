@@ -301,8 +301,12 @@ public final class PushDownRefactoringProcessor extends HierarchyProcessor {
 
 	private static IJavaElement[] getReferencingElementsFromSameClass(IMember member, IProgressMonitor pm, RefactoringStatus status) throws JavaModelException {
 		Assert.isNotNull(member);
-		final RefactoringSearchEngine2 engine= new RefactoringSearchEngine2(SearchPattern.createPattern(member,
-				IJavaSearchConstants.REFERENCES, SearchUtils.GENERICS_AGNOSTIC_MATCH_RULE));
+		SearchPattern pattern= SearchPattern.createPattern(member,
+				IJavaSearchConstants.REFERENCES, SearchUtils.GENERICS_AGNOSTIC_MATCH_RULE);
+		if (pattern == null) {
+			return new IJavaElement[0];
+		}
+		final RefactoringSearchEngine2 engine= new RefactoringSearchEngine2(pattern);
 		engine.setFiltering(true, true);
 		IType declaringType= member.getDeclaringType();
 		engine.setScope(SearchEngine.createJavaSearchScope(new IJavaElement[] { declaringType }));
@@ -333,7 +337,7 @@ public final class PushDownRefactoringProcessor extends HierarchyProcessor {
 									}
 								} else if (expression instanceof SimpleName) {
 									String referenceName= ((SimpleName)expression).getFullyQualifiedName();
-									final TypeDeclaration thisType= (TypeDeclaration)ASTNodes.getFirstAncestorOrNull(methodInvocation, TypeDeclaration.class);
+									final TypeDeclaration thisType= ASTNodes.getFirstAncestorOrNull(methodInvocation, TypeDeclaration.class);
 									if (thisType != null) {
 										final String thisTypeName= thisType.getName().getFullyQualifiedName();
 										for (FieldDeclaration fieldDeclaration : thisType.getFields()) {
